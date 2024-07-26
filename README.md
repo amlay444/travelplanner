@@ -1,4 +1,4 @@
-# React-Native-Expo-Travel-Yt-Starter
+# React-Native-Expo-Travel-Planner
 
 ## Get Started
 

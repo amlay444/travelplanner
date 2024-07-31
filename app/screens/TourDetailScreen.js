@@ -1,4 +1,3 @@
-// TourDetailScreen.js
 import React from "react";
 import {
   StyleSheet,
@@ -21,7 +20,7 @@ const TourDetailScreen = ({ route, navigation }) => {
     <>
       <ScrollView>
         <ImageBackground
-          source={tour.image} // Assuming tour.image is a local image
+          source={tour.image} 
           style={{
             width: "100%",
             height: 500,
@@ -51,7 +50,7 @@ const TourDetailScreen = ({ route, navigation }) => {
                         key={index}
                       >
                         <Image
-                          source={gallery.image} // Assuming gallery.image is a local image
+                          source={gallery.image} 
                           style={{
                             width: "100%",
                             height: "100%",

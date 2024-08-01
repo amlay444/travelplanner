@@ -27,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
+      <Text style={styles.title}>Discover with Itinera</Text>
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -43,7 +43,7 @@ const LoginScreen = ({ navigation }) => {
         secureTextEntry
         autoCapitalize="none"
       />
-      {error && <Text style={styles.error}>{error}</Text>} 
+      {error && <Text style={styles.error}>{error}</Text>}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
@@ -60,47 +60,61 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.background,
-    padding: SPACING * 2,
+    padding: SPACING * 3,
   },
   title: {
-    fontSize: SPACING * 4,
-    fontWeight: 'bold',
-    marginBottom: SPACING * 2,
+    fontSize: SPACING * 4.5,
+    fontWeight: '700',
+    marginBottom: SPACING * 3,
     color: COLORS.dark,
+    textAlign: 'center',
+    letterSpacing: 1.5,
+    fontFamily: 'Roboto', // Default font provided by Expo
   },
   input: {
     width: '100%',
-    height: SPACING * 4.5,
+    height: SPACING * 5,
     borderColor: COLORS.primary,
-    borderWidth: 1,
-    borderRadius: SPACING,
+    borderWidth: 1.5,
+    borderRadius: SPACING * 1.5,
     paddingLeft: SPACING,
-    marginBottom: SPACING,
+    marginBottom: SPACING * 2,
+    fontSize: SPACING * 1.8,
+    fontFamily: 'Roboto', // Default font provided by Expo
   },
   button: {
     backgroundColor: COLORS.primary,
-    paddingVertical: SPACING * 1.5,
-    paddingHorizontal: SPACING * 2,
-    borderRadius: SPACING,
+    paddingVertical: SPACING * 1.8,
+    paddingHorizontal: SPACING * 3,
+    borderRadius: SPACING * 1.5,
     width: '100%',
     alignItems: 'center',
-    marginTop: SPACING,
+    marginTop: SPACING * 2,
+    elevation: 5,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   buttonText: {
     color: COLORS.white,
-    fontSize: SPACING * 2,
-    fontWeight: 'bold',
+    fontSize: SPACING * 2.2,
+    fontWeight: '700',
+    fontFamily: 'Roboto', // Default font provided by Expo
   },
   link: {
     color: COLORS.primary,
-    marginTop: SPACING,
+    marginTop: SPACING * 2,
     textDecorationLine: 'underline',
+    fontSize: SPACING * 1.8,
+    fontFamily: 'Roboto', // Default font provided by Expo
   },
   error: {
     color: COLORS.error,
-    fontSize: SPACING * 1.5,
-    marginBottom: SPACING,
+    fontSize: SPACING * 1.6,
+    marginBottom: SPACING * 2,
     textAlign: 'center',
+    fontFamily: 'Roboto', // Default font provided by Expo
   },
 });
 

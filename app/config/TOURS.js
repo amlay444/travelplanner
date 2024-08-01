@@ -17,7 +17,7 @@ export default [
         image: require("../assets/images/campfire.jpg"),
       },
     ],
-    price: "$ 83",
+    price: "$ 75",
     duration: "3 hours",
     rating: 3.5,
     description:

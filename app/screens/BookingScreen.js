@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
-  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -25,9 +24,11 @@ import {
   where,
 } from "firebase/firestore";
 import { Picker } from "@react-native-picker/picker";
+import { AuthContext } from "../AuthContext";
 
 const BookingScreen = ({ route, navigation }) => {
   const { tour } = route.params;
+  const { user } = useContext(AuthContext); // Get user context
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [mode, setMode] = useState("date");
@@ -39,14 +40,22 @@ const BookingScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      const q = query(collection(firestore, "bookings"), where("tourId", "==", tour.id));
+      if (!user) {
+        return;
+      }
+
+      const q = query(
+        collection(firestore, "bookings"),
+        where("tourId", "==", tour.id),
+        where("userId", "==", user.uid) // Filter by userId
+      );
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setBookings(data);
     };
 
     fetchBookings();
-  }, [tour.id]);
+  }, [tour.id, user]);
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || (isStartDate ? startDate : endDate);
@@ -69,11 +78,18 @@ const BookingScreen = ({ route, navigation }) => {
   };
 
   const handleBooking = async () => {
+    if (!user) {
+      Alert.alert('Not authenticated', 'You must be logged in to make a booking.');
+      return;
+    }
+
     const newBooking = {
       tourId: tour.id,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       people,
+      userId: user.uid, // Add userId to the booking data
+      username: user.displayName, // Add username to the booking data
     };
 
     if (editing) {
@@ -89,7 +105,7 @@ const BookingScreen = ({ route, navigation }) => {
     setStartDate(new Date());
     setEndDate(new Date());
     setPeople(1);
-    alert(`Booking ${editing ? "updated" : "added"} successfully.`);
+    Alert.alert('Success', `Booking ${editing ? "updated" : "added"} successfully.`);
   };
 
   const handleDelete = (id) => {
@@ -107,7 +123,7 @@ const BookingScreen = ({ route, navigation }) => {
             const bookingDoc = doc(firestore, "bookings", id);
             await deleteDoc(bookingDoc);
             setBookings(bookings.filter(b => b.id !== id));
-            alert("Booking deleted successfully.");
+            Alert.alert('Success', "Booking deleted successfully.");
           },
           style: "destructive",
         },
@@ -124,81 +140,73 @@ const BookingScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Fill in your details</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Fill in your details</Text>
+      </View>
 
-        <View style={styles.content}>
-          <Text style={styles.title}>{tour.title}</Text>
-          <Text style={styles.price}>{tour.price} /person</Text>
-          <Text style={styles.label}>Select Start Date:</Text>
-          <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.dateButton}>
-            <Text style={styles.dateText}>{startDate.toDateString()}</Text>
-          </TouchableOpacity>
-          <Text style={styles.label}>Select End Date:</Text>
-          <TouchableOpacity onPress={() => showDatepicker(false)} style={styles.dateButton}>
-            <Text style={styles.dateText}>{endDate.toDateString()}</Text>
-          </TouchableOpacity>
-          <Text style={styles.label}>Select Number of People:</Text>
-          <Picker
-            selectedValue={people}
-            style={styles.picker}
-            onValueChange={(itemValue, itemIndex) => setPeople(itemValue)}
-          >
-            {[...Array(20).keys()].map(i => (
-              <Picker.Item key={i} label={`${i + 1}`} value={i + 1} />
-            ))}
-          </Picker>
-          {show && (
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={isStartDate ? startDate : endDate}
-              mode={mode}
-              display="default"
-              onChange={onChange}
-            />
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-          <Text style={styles.bookButtonText}>{editing ? "Update Booking" : "Add Booking"}</Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>{tour.title}</Text>
+        <Text style={styles.price}>{tour.price} /person</Text>
+        <Text style={styles.label}>Select Start Date:</Text>
+        <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.dateButton}>
+          <Text style={styles.dateText}>{startDate.toDateString()}</Text>
         </TouchableOpacity>
+        <Text style={styles.label}>Select End Date:</Text>
+        <TouchableOpacity onPress={() => showDatepicker(false)} style={styles.dateButton}>
+          <Text style={styles.dateText}>{endDate.toDateString()}</Text>
+        </TouchableOpacity>
+        <Text style={styles.label}>Select Number of People:</Text>
+        <Picker
+          selectedValue={people}
+          style={styles.picker}
+          onValueChange={(itemValue) => setPeople(itemValue)}
+        >
+          {[...Array(20).keys()].map(i => (
+            <Picker.Item key={i} label={`${i + 1}`} value={i + 1} />
+          ))}
+        </Picker>
+        {show && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={isStartDate ? startDate : endDate}
+            mode={mode}
+            display="default"
+            onChange={onChange}
+          />
+        )}
+      </View>
 
-        <FlatList
-          data={bookings}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.bookingItem}>
-              <Text style={styles.bookingDate}>{`${new Date(item.startDate).toDateString()} - ${new Date(item.endDate).toDateString()}`}</Text>
-              <Text style={styles.bookingPeople}>People: {item.people}</Text>
-              <View style={styles.bookingActions}>
-                <TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionButton}>
-                  <Ionicons name="pencil" size={SPACING * 2} color={COLORS.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionButton}>
-                  <Ionicons name="trash" size={SPACING * 2} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
+      <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
+        <Text style={styles.bookButtonText}>{editing ? "Update Booking" : "Add Booking"}</Text>
+      </TouchableOpacity>
+
+      <FlatList
+        data={bookings}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.bookingItem}>
+            <Text style={styles.bookingDate}>{`${new Date(item.startDate).toDateString()} - ${new Date(item.endDate).toDateString()}`}</Text>
+            <Text style={styles.bookingPeople}>People: {item.people}</Text>
+            <View style={styles.bookingActions}>
+              <TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionButton}>
+                <Ionicons name="pencil" size={SPACING * 2} color={COLORS.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionButton}>
+                <Ionicons name="trash" size={SPACING * 2} color={COLORS.primary} />
+              </TouchableOpacity>
             </View>
-          )}
-        />
-      </ScrollView>
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 };
-
-export default BookingScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: SPACING * 2,
     backgroundColor: COLORS.white,
-  },
-  scrollView: {
-    flexGrow: 1,
-    justifyContent: 'center',
   },
   header: {
     flexDirection: "row",
@@ -276,3 +284,5 @@ const styles = StyleSheet.create({
     marginLeft: SPACING,
   },
 });
+
+export default BookingScreen;

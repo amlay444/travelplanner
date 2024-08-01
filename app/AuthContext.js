@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from './config/FireBaseConfig';
 
 export const AuthContext = createContext();
@@ -31,9 +31,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (email, password) => {
+  const signup = async (email, password, firstName, lastName) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update the user's profile
+      await updateProfile(user, {
+        displayName: `${firstName} ${lastName}`,
+      });
+
+      setUser({ ...user, displayName: `${firstName} ${lastName}` }); // Update local user state
     } catch (error) {
       throw new Error(error.message);
     }
